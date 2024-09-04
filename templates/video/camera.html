@@ -37,7 +37,7 @@
         // Check if getUserMedia is supported
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
             // Start video stream
-            navigator.mediaDevices.getUserMedia({ video: true })
+            navigator.mediaDevices.getUserMedia({ video: true }) // 전면 후면 전환 테스트 {facingMode: { exact: "user" }}
                 .then(stream => {
                     video.srcObject = stream;
                     console.log("Camera stream started successfully.");

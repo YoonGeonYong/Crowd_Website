@@ -44,9 +44,8 @@
     const socket = io(); // 'http://35.216.0.58:8080/'
     let interval;
 
-    // Check if getUserMedia is supported
+    // getUserMedia 사용 확인
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-        // Start video stream
         navigator.mediaDevices.getUserMedia({ video: true })
             .then(stream => {
                 video.srcObject = stream;
