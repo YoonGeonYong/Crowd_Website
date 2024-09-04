@@ -1,10 +1,12 @@
 run.sh
 
+docs/
 test/
 upload/
+ssl/
 
-*.cpython-39.pyc
-*/*/*/__pycache__/
-*/*/__pycache__/
-*/__pycache__/
+.jpg
+.cpython-39.pyc
+__pycache__/
+
 .DS_Store
