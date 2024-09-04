@@ -19,4 +19,5 @@ app.register_blueprint(image_views.bp)
 socketio = events.init_socketio(app) # socketio : 웹 소켓 (+ 이벤트 핸들러 등록)
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0', port=8080, debug=True)
+    # socketio.run(app, host='0.0.0.0', port=8080, debug=True)                      # http
+    socketio.run(app, host="0.0.0.0", ssl_context=("ssl/cert.pem", "ssl/key.pem"))  # https
