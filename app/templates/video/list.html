@@ -1,0 +1,37 @@
+{% extends 'element/base.html' %}
+{% block content %}
+<h1>Video List</h1>
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>no</th>
+                <th>Id</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+                <th>Graph</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if id_list %}
+            {% for id in id_list %}
+            <tr class="text-center">
+                <td>{{ loop.index }}</td>
+                <td>{{ id }}</td>
+                <td>{{ latitude_list[loop.index0] }}</td>
+                <td>{{ longitude_list[loop.index0] }}</td>
+                <td><a href="/video/{{ id }}/stat" class="button primary fit">click</a></td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr>
+                <td colspan="5">No Data ()</td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
+
+<script>
+</script>

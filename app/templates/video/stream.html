@@ -1,0 +1,184 @@
+{% extends "element/base.html" %}
+{% block content %}
+<h1>Camera</h1>
+<div id="idSection" style="display: flex">
+    <input id="inputId" type="text" placeholder="Enter ID" style="flex: 1; margin-right: 20px;"/>
+    <button id="startButton">Start</button>
+</div>
+
+<div id="videoSection" style="display: none;">
+    <video id="video" width="100%" autoplay playsinline></video>
+    <button id="switchButton" style="display: block">Switch</button><br>
+    
+    <img id="densityMap" alt="-"/>
+    <img id="crowdPoint" alt="-"/>
+    <h2>Count: <span id="crowdCount">-</span></h2>
+    <h2>Density: <span id="crowdDensity">-</span></h2>
+    <h2>location: <span id="latitude">-</span>, <span id="longitude">-</span></h2>
+</div>
+<canvas id="canvas" style="display: none;"></canvas>
+
+<script src="{{ url_for('static', filename='assets/js/socket.io.js') }}"></script>
+<script>
+    (() => {
+        // options
+        let width = 1300; // canvas w, h (없으면 그림을 못 그림)
+        let height = 0;
+        
+        let interval = 3000;
+        let stream = null;
+        let streaming = false
+        let cameraMode = "user";
+    
+        // elements
+        let idSection;
+        let idInput;
+        let startButton;
+        
+        let videoSection;
+        let video;
+        let switchButton;
+        
+        let canvas;
+        let densityMap
+        let crowdPoint;
+        let crowdCount;
+        let crowdDensity;
+        let latitude;
+        let longitude;
+    
+        let socket;
+        
+        // 초기 설정
+        function startup() {
+            // elements 연결
+            idSection = document.getElementById("idSection");
+            idInput = document.getElementById("inputId");
+            startButton = document.getElementById("startButton");
+    
+            videoSection = document.getElementById("videoSection");
+            video = document.getElementById("video");
+            switchButton = document.getElementById("switchButton");
+        
+            canvas = document.getElementById("canvas");
+            densityMap = document.getElementById("densityMap");
+            crowdPoint = document.getElementById("crowdPoint");
+            crowdCount = document.getElementById("crowdCount");
+            crowdDensity = document.getElementById("crowdDensity");
+            latitude = document.getElementById("latitude")
+            longitude = document.getElementById("longitude")
+        
+            socket = io(); // "http://35.216.0.58:8080/"
+    
+            // listener 등록
+            video.addEventListener("canplay", () => {
+                if (!streaming) {
+                    height = video.videoHeight / (video.videoWidth / width);
+
+                    canvas.setAttribute("width", width);
+                    canvas.setAttribute("height", height);
+                    streaming = true;
+                }
+            });
+
+            startButton.addEventListener("click", () => {
+                if (idInput.value.trim() !== "") {
+                    startCamera();                          // 카메라 시작
+                    setInterval(sendImg, interval);         // 1초마다 웹 전송
+    
+                    idSection.style.display = "none";       // 숨기고
+                    videoSection.style.display = "block";   // 보이고
+                } else {
+                    alert("Please Input ID");
+                }
+            });
+
+            switchButton.addEventListener("click", () => {
+                switchCamera();
+            })
+    
+            // socket 등록 (이미지 웹 소켓 받기)
+            socket.on("response", 
+                data => {
+                    densityMap.src = "data:image/jpeg;base64," + data.densityMap;
+                    crowdPoint.src = "data:image/jpeg;base64," + data.crowdPoint;
+                    crowdCount.textContent = data.crowdCount;
+                    crowdDensity.textContent = data.crowdDensity.toFixed(2);
+                }
+            );
+
+            // 함수 실행
+            getLocation();
+        }    
+        
+        // 카메라 실행
+        function startCamera() {
+            // stream 옵션
+            const opt = {
+                video: { facingMode: cameraMode },
+                audio: false
+            }
+    
+            // 이전 stream 중지
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+    
+            // stream 시작
+            navigator.mediaDevices.getUserMedia(opt)
+            .then(_stream => {
+                video.srcObject = _stream;
+                video.play();
+                stream = _stream
+            })
+            .catch(err => {
+                console.error(`Error : ${err}`);
+            });
+        }
+        
+        function switchCamera() {
+            cameraMode = cameraMode === "user" ? "environment" : "user";
+            startCamera(); // stream 재시작
+        }
+
+        // 이미지 웹 소켓 전송
+        function sendImg() {
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const data = canvas.toDataURL("image/jpeg");
+            const id = idInput.value;
+            const lat = latitude.textContent;
+            const lon = longitude.textContent;
+
+            socket.emit("image", 
+                { 
+                    image: data.split(",")[1],  // base64 전송
+                    id: id,
+                    lat: lat,
+                    lon: lon
+                }
+            );
+        }
+    
+        // gps 받기
+        function getLocation() {
+            navigator.geolocation.watchPosition(
+                pos => {
+                    latitude.textContent = pos.coords.latitude.toFixed(4)
+                    longitude.textContent = pos.coords.longitude.toFixed(4)
+                }, 
+                err => {
+                    console.error(`Error : ${err}`);
+                }, 
+                {
+                    enableHighAccuracy: true,
+                    maximumAge: 0,
+                    timeout: 5000
+            });
+        }
+    
+        window.addEventListener("load", startup);
+    })();
+</script>
+{% endblock %}

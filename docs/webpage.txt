@@ -14,7 +14,6 @@
 
 
 < index.html >
-ß
 Crowded, 군중 모니터링, 탐지, 분석
 해당 시스템은 즉각적인 대응을 위한 실시간 모니터링, 장기적인 대응을 위한 시계열 데이터 분석를 수행함
 | Crowded, a system of Crowd Monitoring, Analysis

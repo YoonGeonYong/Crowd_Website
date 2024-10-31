@@ -1,0 +1,98 @@
+{% extends 'element/base.html' %}
+{% block content %}
+<h1>Statistic</h1>
+<canvas id="countCanvas" width="400" height="200"></canvas>
+<canvas id="densityCanvas" width="400" height="200"></canvas>
+
+<script src="{{ url_for('static', filename='assets/js/char.js') }}"></script>
+<script src="{{ url_for('static', filename='assets/js/jquery.min.js' ) }}"></script>
+<script>
+    (() => {
+        let countCtx;
+        let densityCtx;
+        let countChart;
+        let densityChart;
+
+        function startup() {
+            countCtx = document.getElementById('countCanvas').getContext('2d');
+            densityCtx = document.getElementById('densityCanvas').getContext('2d');
+
+            // Crowd Count 차트
+            countChart = new Chart(countCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Crowd Count',
+                        data: [],
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Count'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Crowd Density 차트
+            densityChart = new Chart(densityCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Crowd Density',
+                        data: [],
+                        backgroundColor: 'rgba(192, 75, 75, 0.2)',
+                        borderColor: 'rgba(192, 75, 75, 1)',
+                        fill: true
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Density'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChart() {
+            $.getJSON('/video/{{ id }}/data', 
+                data => {
+                    const labels = data.time;
+                    const countData = data.count;
+                    const densityData = data.density;
+
+                    // Count 차트 데이터 업데이트
+                    countChart.data.labels = labels;
+                    countChart.data.datasets[0].data = countData;
+                    countChart.update();
+
+                    // Density 차트 데이터 업데이트
+                    densityChart.data.labels = labels;
+                    densityChart.data.datasets[0].data = densityData;
+                    densityChart.update();
+                }
+            );
+        }
+
+        startup();
+        updateChart();                  // 페이지 로드 시, 업데이트
+        setInterval(updateChart, 2000); // 2초마다 업데이트
+    })();
+</script>
+{% endblock %}

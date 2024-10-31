@@ -1,0 +1,117 @@
+<div>
+    <video id="video">Video stream not available.</video>
+    <button id="startbutton">Take photo</button>
+    <button id="switchbutton">Switch Camera</button> <!-- 카메라 전환 버튼 -->
+</div>
+
+<h3>canvas</h3>
+<canvas id="canvas"> </canvas>
+
+<h3>image</h3>
+<img id="photo" alt="The screen capture will appear in this box." />
+
+<script>
+    (() => {
+        const width = 320;
+        let height = 0;
+        let streaming = false;
+        let currentFacingMode = "user"; // 초기값은 전면 카메라
+        let currentStream = null; // 현재 스트림 저장
+
+        let video = null;
+        let canvas = null;
+        let photo = null;
+        let startbutton = null;
+        let switchbutton = null;
+
+        function startup() {
+            video = document.getElementById("video");
+            canvas = document.getElementById("canvas");
+            photo = document.getElementById("photo");
+            startbutton = document.getElementById("startbutton");
+            switchbutton = document.getElementById("switchbutton"); // 전환 버튼 연결
+
+            video.addEventListener("canplay", () => {
+                if (!streaming) {
+                    height = video.videoHeight / (video.videoWidth / width);
+
+                    video.setAttribute("width", width);
+                    video.setAttribute("height", height);
+                    canvas.setAttribute("width", width);
+                    canvas.setAttribute("height", height);
+                    streaming = true;
+                }
+            });
+
+            startbutton.addEventListener("click", () => {
+                takephoto();
+            });
+
+            switchbutton.addEventListener("click", () => {
+                switchCamera();
+            });
+
+            startCamera();
+            clearphoto();
+        }
+
+        function startCamera() {
+            const constraints = {
+                video: {
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 },
+                    facingMode: currentFacingMode // 현재 카메라 모드 설정
+                },
+                audio: false
+            };
+
+            // 이전 스트림 중지
+            if (currentStream) {
+                currentStream.getTracks().forEach(track => track.stop());
+            }
+
+            // 스트림 시작
+            navigator.mediaDevices.getUserMedia(constraints)
+                .then(stream => {
+                    video.srcObject = stream;
+                    video.play();
+
+                    currentStream = stream;
+                })
+                .catch(err => {
+                    console.error(`Error : ${err}`);
+                });
+        }
+
+        function switchCamera() {
+            currentFacingMode = currentFacingMode === "user" ? "environment" : "user";
+            startCamera(); // 재시작
+        }
+
+
+        function clearphoto() {
+            const context = canvas.getContext("2d");
+            context.fillStyle = "#AAA";
+            context.fillRect(0, 0, canvas.width, canvas.height);
+
+            const data = canvas.toDataURL("image/jpeg");
+            photo.setAttribute("src", data);
+        }
+
+        function takephoto() {
+            const context = canvas.getContext("2d");
+            if (width && height) {
+                canvas.width = width;
+                canvas.height = height;
+                context.drawImage(video, 0, 0, width, height);
+
+                const data = canvas.toDataURL("image/jpeg");
+                photo.setAttribute("src", data);
+            } else {
+                clearphoto();
+            }
+        }
+
+        window.addEventListener("load", startup, false);
+    })();
+</script>
