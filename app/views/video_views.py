@@ -50,6 +50,12 @@ def statistic(id):
 def get_data(id):
     db = current_app.config['db']
     
+    # query = f"""SELECT *                  # test graph
+    #             FROM "crowd_density"
+    #             WHERE "id" IN ('hall')
+    #             AND time >= '2024-10-31T04:41:17'
+    #             AND time <= '2024-10-31T05:25:19'
+    #             ORDER BY "time" ASC"""
     query = f"""SELECT *
                 FROM "crowd_density"
                 WHERE "id" IN ('{id}')
